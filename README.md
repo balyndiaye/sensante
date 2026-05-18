@@ -34,7 +34,7 @@ SenSante utilise le Machine Learning pour aider au pre-diagnostic des maladies c
 
 
 
-Moussa Diallo - L2 GLSI - ESP/UCAD
+Baly Ndiaye - DUT2 Informatique - ESP/UCAD
 
 
 
