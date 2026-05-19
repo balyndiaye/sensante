@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- Schemas Pydantic ---
 
@@ -25,12 +26,27 @@ class DiagnosticOutput(BaseModel):
     confiance: str
     message: str
 
+class ModelInfoOutput(BaseModel):
+    model_type: str
+    n_estimators: int
+    classes: list
+    n_features: int
+
 # --- Application FastAPI ---
 
 app = FastAPI(
     title="SenSante API",
     description="Assistant pre-diagnostic medical pour le Senegal",
     version="0.2.0"
+)
+
+# Autoriser les requetes depuis le frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],    # En dev : tout accepter
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- Chargement du modele (une seule fois) ---
@@ -47,6 +63,18 @@ print(f"Modele charge : {list(model.classes_)}")
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "SenSante API is running"}
+
+@app.get("/model-info", response_model=ModelInfoOutput)
+def get_model_info():
+    """
+    Renvoie les informations techniques sur le modele charge en memoire.
+    """
+    return ModelInfoOutput(
+        model_type=type(model).__name__,            # Dynamiquement "RandomForestClassifier"
+        n_estimators=model.n_estimators,            # Nombre d'arbres dans le modele
+        classes=list(model.classes_),               # Liste des pathologies
+        n_features=len(feature_cols)                # Nombre de colonnes (features) attendues
+    )
 
 @app.post("/predict", response_model=DiagnosticOutput)
 def predict(patient: PatientInput):
